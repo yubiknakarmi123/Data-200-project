@@ -8,6 +8,8 @@ a trained logistic regression model (~45k historical records).
 import pandas as pd
 import joblib
 import streamlit as st
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 st.set_page_config(
     page_title="Loan Approval Predictor",
@@ -84,6 +86,55 @@ with st.expander(f"📊 View Model Performance Benchmark (Test set: {metrics['n_
         "Because approval data is naturally imbalanced (~22% baseline approval rate), the model is tuned "
         "with weighted classes to emphasize recall—minimizing missed qualified applicants."
     )
+
+st.divider()
+
+# Visual model evaluation section
+st.subheader("📈 Visual Model Evaluation")
+st.caption(
+    f"Visual summaries of the model's performance on {metrics['n_test']:,} held-out test applications."
+)
+
+chart_col1, chart_col2 = st.columns(2)
+
+with chart_col1:
+    st.markdown("**Confusion Matrix**")
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.heatmap(
+        metrics["confusion_matrix"],
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        cbar=False,
+        xticklabels=["Rejected", "Approved"],
+        yticklabels=["Rejected", "Approved"],
+        ax=ax,
+    )
+    ax.set_xlabel("Predicted outcome")
+    ax.set_ylabel("Actual outcome")
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+with chart_col2:
+    st.markdown("**Test-Set Metric Scores**")
+    metric_names = ["Accuracy", "Precision", "Recall", "F1 Score", "ROC-AUC"]
+    metric_scores = [
+        metrics["accuracy"],
+        metrics["precision"],
+        metrics["recall"],
+        metrics["f1"],
+        metrics["roc_auc"],
+    ]
+    fig, ax = plt.subplots(figsize=(5, 4))
+    bars = ax.bar(metric_names, metric_scores, color="#4C78A8")
+    ax.set_ylim(0, 1)
+    ax.set_ylabel("Score")
+    ax.set_title("Performance metrics")
+    ax.tick_params(axis="x", labelrotation=25)
+    ax.bar_label(bars, fmt="%.2f", padding=3)
+    fig.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
 st.divider()
 
@@ -177,4 +228,3 @@ st.divider()
 st.caption(
     "Note: Built for demonstration & statistical portfolio analysis. Model results should not be used as official financial decisions."
 )
-
